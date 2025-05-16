@@ -11,7 +11,7 @@ sv_tmp=repmat(gls.sv,nobs-1,1);
 
 for i=1:nobs
     
-    % exclude a satellite
+    % exclude a satellite   剔除一颗卫星
     k=0;
     for j=1:nobs
         if j==i,continue;end
@@ -20,9 +20,9 @@ for i=1:nobs
         k=k+1;
     end
     
-    %estimate position without a satellite
+    %estimate position without a satellite  再用estpos()算一次
     [rtk_tmp,sat_tmp,stat0]=estpos(rtk,obs_tmp,nav,sv_tmp,opt);
-    if stat0==0,continue;end
+    if stat0==0,continue;end    %算出stat=0就不保存，跳到下一个循环
     
     resp_tmp=sat_tmp.resp; vsat_tmp=sat_tmp.vsat;
     rms=0; nvsat=0;

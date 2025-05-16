@@ -15,7 +15,7 @@ chisqr=[
     138 ,139 ,140 ,142 ,143 ,144 ,145 ,147 ,148 ,149 ];
 stat=1; nx=3+glc.NSYS;
 
-%chi-square test for residuals
+%chi-square test for residuals  卡方检验：默认协方差矩阵算出来是卡方的：每一个都是高斯分布。若检验不是高斯分布，说明噪声严重，结果被舍弃
 nv=size(v,1); var=P^-1;
 for i=1:nv
     v(i)=v(i)/sqrt(var(i,i));
@@ -27,7 +27,7 @@ if nv>nx && dot(v,v)>chisqr(nv-nx)
     return;
 end
 
-%validate GDOP
+%validate GDOP  GDOP检验：若卫星几何构型太差，也认为结果不可信，舍弃
 ns=0; n=size(vsat,1); azels=zeros(n,2);
 for i=1:n
     if vsat(i)==0,continue;end

@@ -24,13 +24,13 @@ if rtk.opt.mode~=glc.PMODE_SPP
     opt.ionoopt=glc.TROPOPT_SAAS;
 end
 
-% cumpute satellite(space vehicle) position,clock bias,velocity,clock drift
+% compute satellite(space vehicle) position,clock bias,velocity,clock drift
 sv=satposs(obs,navs,opt.sateph); 
 
 % compute reciever position,clock bias
-[rtk,sat_,stat0]=estpos(rtk,obs,navs,sv,opt); 
+[rtk,sat_,stat0]=estpos(rtk,obs,navs,sv,opt); %位置解算出来
 
-% raim failure detection and exclution(FDE)
+% RAIM failure detection and exclution(FDE)
 if stat0==0&&nobs>=6&&rtk.opt.posopt(5)==1
     [wn,sow]=time2gpst(rtk.sol.time);
     fprintf('Info:GPS week = %d sow = %.3f,RAIM failure detection and exclution\n',wn,sow);
@@ -42,7 +42,7 @@ if stat0~=0
     rtk=estvel(rtk,obs,navs,sv,opt,sat_);
 end
 
-% check the consistency of position and velocity
+% check the consistency of position and velocity    位置前后变化大、或者速度快，则舍弃数据
 tt=timediff(obs(1).time,rtk.rcv.time);
 if norm(rtk.rcv.oldpos)~=0&&norm(rtk.sol.pos)~=0&&...
         norm(rtk.rcv.oldvel)~=0&&norm(rtk.sol.vel)~=0&&abs(tt)<=1
@@ -55,7 +55,7 @@ if norm(rtk.rcv.oldpos)~=0&&norm(rtk.sol.pos)~=0&&...
     end 
 end
 
-% check the correctness of the receiver clock bias estimation
+% check the correctness of the receiver clock bias estimation   接收机钟差变化太多，则舍弃数据
 tt=timediff(obs(1).time,rtk.rcv.time);
 if abs(rtk.sol.dtrd)>5&&abs(tt)<=10
     if rtk.rcv.clkbias~=0&&rtk.rcv.clkdrift~=0&&rtk.sol.dtr(1)~=0&&...
@@ -69,7 +69,7 @@ if abs(rtk.sol.dtrd)>5&&abs(tt)<=10
     end
 end
 
-if rtk.sol.stat~=glc.SOLQ_NONE
+if rtk.sol.stat~=glc.SOLQ_NONE 
     rtk.rcv.time=obs(1).time;
     rtk.rcv.oldpos=rtk.sol.pos;
     rtk.rcv.oldvel=rtk.sol.vel;

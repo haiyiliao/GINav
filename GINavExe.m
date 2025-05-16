@@ -30,7 +30,7 @@ if gui_flag==0
     return;
 end 
 
-% execute positioning
+% execute positioning   主程序
 exepos(opt,file);
 
 %--------------------------------------------------------------------------

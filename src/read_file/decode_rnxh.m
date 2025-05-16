@@ -10,7 +10,7 @@ sys=glc.SYS_GPS;   tsys=glc.TSYS_GPS;
 
 % read file header information
 while 1
-    if feof(fid),break;end
+    if feof(fid),break;end  %无用行
     line=fgets(fid);  label=line(61:end);
     if size(line,2)<=60
         continue;

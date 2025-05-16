@@ -4,7 +4,7 @@ function [rtk,sat_,stat]=estpos(rtk,obs,nav,sv,opt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global  glc
 NX=3+glc.NSYS; MAXITER=10; iter=1;
-time=obs(1).time; xr0=[rtk.sol.pos';zeros(glc.NSYS,1)];
+time=obs(1).time; xr0=[rtk.sol.pos';zeros(glc.NSYS,1)]; %待估参数：位置+系统数
 
 while iter<=MAXITER
     
@@ -30,16 +30,16 @@ while iter<=MAXITER
         rtk.sol.vel =zeros(1,3);
         rtk.sol.posP(1)=Q(1,1);rtk.sol.posP(2)=Q(2,2);rtk.sol.posP(3)=Q(3,3);
         rtk.sol.posP(4)=Q(1,2);rtk.sol.posP(5)=Q(2,3);rtk.sol.posP(6)=Q(1,3);
-        rtk.sol.dtr(1) =xr0(4)/glc.CLIGHT;
+        rtk.sol.dtr(1) =xr0(4)/glc.CLIGHT;  %GPS钟差
         rtk.sol.dtr(2) =xr0(5)/glc.CLIGHT;
         rtk.sol.dtr(3) =xr0(6)/glc.CLIGHT;
         rtk.sol.dtr(4) =xr0(7)/glc.CLIGHT;
         rtk.sol.dtr(5) =xr0(8)/glc.CLIGHT;
           
-        % validate solution
+        % validate solution 结果验证
         stat=valsol(time,v,P,vsat,azel,opt);
-        if stat==1
-            rtk.sol.stat=glc.SOLQ_SPP; return;
+        if stat==1  %通过检验
+            rtk.sol.stat=glc.SOLQ_SPP; return;  %记录解算方法
         end
         return;
     end  
@@ -47,7 +47,7 @@ while iter<=MAXITER
 end
 
 if iter>MAXITER
-    stat=0;
+    stat=0;                         %系统异常
     [week,sow]=time2gpst(time);
     fprintf('Warning:GPS week = %d sow = %.3f,SPP iteration divergent!\n',week,sow);
     return;

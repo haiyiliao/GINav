@@ -11,15 +11,15 @@ rtk.sol.stat=glc.SOLQ_NONE;
 
 if opt.mode==glc.PMODE_SPP||opt.mode>=glc.PMODE_PPP_KINEMA
     % scan obs for spp
-    [obsr,nobs]=scan_obs_spp(obsr);
+    [obsr,nobs]=scan_obs_spp(obsr); %判断卫星是否有伪距存在
     if nobs==0,stat0=0;return;end
-    % correct BDS2 multipath error
+    % correct BDS2 multipath error  北2多径校正
     if ~isempty(strfind(opt.navsys,'C'))
         obsr=bds2mp_corr(rtk,obsr);
     end
 end
 
-% standard point positioning
+% standard point positioning    SPP处理，若不需要继续处理，则return
 [rtk,stat0]=sppos(rtk,obsr,nav);
 if stat0==0,return;end
 
@@ -29,7 +29,7 @@ if opt.mode==glc.PMODE_SPP,return;end
 % suppress output of single solution
 rtk.sol.stat=glc.SOLQ_NONE;
 
-if opt.mode>=glc.PMODE_PPP_KINEMA
+if opt.mode>=glc.PMODE_PPP_KINEMA   %进入PPP处理
     % scan obs for ppp
     [obsr,nobs]=scan_obs_ppp(obsr);
     if nobs==0,stat0=0;return;end
@@ -41,7 +41,7 @@ if opt.mode>=glc.PMODE_PPP_KINEMA
 end
 
 if ~isstruct(obsb),stat0=0;return;end
-rtk.sol.age=timediff(obsr(1).time,obsb(1).time);
+rtk.sol.age=timediff(obsr(1).time,obsb(1).time);    %rover和BS的时间差
 % relative psotioning
 [rtk,stat0]=relpos(rtk,obsr,obsb,nav);
 

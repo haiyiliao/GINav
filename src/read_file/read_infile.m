@@ -8,7 +8,7 @@ function [obsr,obsb,nav,imu]=read_infile(opt,file)
 global glc gls
 obsr=gls.obs; obsb=gls.obs; nav=gls.nav; imu=gls.imu;
 
-% read rover observation file
+% read rover observation file   读rover数据
 if ~strcmp(file.obsr,'')
     [obsr,nav]=readrnxobs(obsr,nav,opt,file.obsr);
     if obsr.n==0
@@ -18,7 +18,7 @@ else
     error('Have no observation file for rover!!!');
 end
 
-% read rover observation file
+% read base station observation file    读BS数据
 if ~strcmp(file.obsb,'')
     [obsb,nav]=readrnxobs(obsb,nav,opt,file.obsb);
     if obsb.n==0&&opt.mode>=glc.PMODE_DGNSS&&opt.mode<=glc.PMODE_STATIC
@@ -30,7 +30,7 @@ else
     end
 end
 
-% read broadcast ephemeris file
+% read broadcast ephemeris file     读导航电文数据
 if ~strcmp(file.beph,'')
     nav=readrnxnav(nav,opt,file.beph);
 else
