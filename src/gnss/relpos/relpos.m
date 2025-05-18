@@ -42,7 +42,7 @@ svb=satposs(obsb,nav,opt.sateph);
 [zdb,stat_tmp]=zdres(2,obsb,svb,nav,rtk.basepos,opt,rtk);
 if stat_tmp==0,stat0=0;return;end
 
-ind=selcomsat(obsr,obsb,opt,zdb);
+ind=selcomsat(obsr,obsb,opt,zdb); %选择共视卫星
 if ind.ns==0,stat0=0;return;end
 
 % debug tracing
@@ -61,7 +61,7 @@ rtk=udstate(rtk,obsr,obsb,nav,ind);
 % printP(rtk.P,rtk);
 
 xp=rtk.x; Pp=zeros(rtk.nx,rtk.nx);
-for i=1:opt.niter
+for i=1:opt.niter % 迭代计算双差残差
     
     % zero-differenced residuals for rover
     [zdr,stat_tmp]=zdres(1,obsr,svr,nav,xp(1:3),opt,rtk);
@@ -94,10 +94,10 @@ for i=1:opt.niter
 end
 
 if stat~=glc.SOLQ_NONE
-    % zero-differenced residuals for rover
+    % zero-differenced residuals for rover  rover的后验非差残差
     [zdr,stat_tmp]=zdres(1,obsr,svr,nav,xp(1:3),opt,rtk);
     if stat_tmp~=0
-        % post-fit residuals for float solution
+        % post-fit residuals for float solution 浮点解的后验双差残差
         [rtk,v,~,R,nv,vflag]=ddres(rtk,nav,dt,xp,Pp,zdr,zdb,ind);
         % validation of float solution
         if valpos_rel(rtk,v,R,vflag,nv,4)
@@ -121,18 +121,18 @@ end
 
 % ambiguity resolution
 if stat~=glc.SOLQ_NONE
-    [rtk,~,xa,nb]=resamb(rtk);
+    [rtk,~,xa,nb]=resamb(rtk);  %模糊度固定，此时解算出固定解
     if nb>1
-        % zero-differenced residuals for rover
+        % zero-differenced residuals for rover  rover的后验非差残差
         [zdr,stat_tmp]=zdres(1,obsr,svr,nav,xa(1:3),opt,rtk);
         if stat_tmp~=0
-            % post-fit reisiduals for fixed solution
+            % post-fit reisiduals for fixed solution    固定解的后验双差残差
             [rtk,v,~,R,nv,vflag]=ddres(rtk,nav,dt,xa,Pp,zdr,zdb,ind);
             % validation of fixed solution
             if valpos_rel(rtk,v,R,vflag,nv,4)
                 rtk.nfix=rtk.nfix+1;
                 if rtk.nfix>=opt.minfix&&rtk.opt.modear==glc.ARMODE_FIXHOLD
-                    % hold integer ambiguity
+                    % hold integer ambiguity %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 这是干嘛的？
                     rtk=holdamb(rtk,xa);
                 end
                 stat=glc.SOLQ_FIX;
@@ -142,7 +142,7 @@ if stat~=glc.SOLQ_NONE
 end
 
 % save solution status
-if stat==glc.SOLQ_FIX
+if stat==glc.SOLQ_FIX   %固定解
     rtk.sol.pos=rtk.xa(1:3)';
     rtk.sol.posP(1)=rtk.Pa(1,1); rtk.sol.posP(2)=rtk.Pa(2,2);
     rtk.sol.posP(3)=rtk.Pa(3,3); rtk.sol.posP(4)=rtk.Pa(1,2);
@@ -153,7 +153,7 @@ if stat==glc.SOLQ_FIX
         rtk.sol.velP(3)=rtk.Pa(6,6); rtk.sol.velP(4)=rtk.Pa(4,5);
         rtk.sol.velP(5)=rtk.Pa(5,6); rtk.sol.velP(6)=rtk.Pa(4,6);
     end
-else
+else    %浮点解
     rtk.sol.pos=rtk.x(1:3)';
     rtk.sol.posP(1)=rtk.P(1,1); rtk.sol.posP(2)=rtk.P(2,2);
     rtk.sol.posP(3)=rtk.P(3,3); rtk.sol.posP(4)=rtk.P(1,2);

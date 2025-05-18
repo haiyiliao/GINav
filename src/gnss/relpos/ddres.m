@@ -24,11 +24,11 @@ end
 % compute factors of ionospheric and tropospheric delay
 for i=1:ns
     if opt.ionoopt==glc.IONOOPT_EST
-        im(i)=(ionmapf(posr,zdr(ir(i)).azel)+ionmapf(posb,zdb(ib(i)).azel))/2;
+        im(i)=(ionmapf(posr,zdr(ir(i)).azel)+ionmapf(posb,zdb(ib(i)).azel))/2;  % 电离层校正
     end
     if opt.tropopt>=glc.TROPOPT_EST
-        [tropr(i),dtdxr(i,:)]=prectrop(rtk.sol.time,posr,1,zdr(ir(i)).azel,rtk,x);
-        [tropb(i),dtdxb(i,:)]=prectrop(rtk.sol.time,posb,2,zdb(ib(i)).azel,rtk,x);
+        [tropr(i),dtdxr(i,:)]=prectrop(rtk.sol.time,posr,1,zdr(ir(i)).azel,rtk,x);  % rover对流层校正
+        [tropb(i),dtdxb(i,:)]=prectrop(rtk.sol.time,posb,2,zdb(ib(i)).azel,rtk,x);  % BS对流层校正
     end
 end
 
@@ -40,16 +40,16 @@ for m=1:5
         
         % search reference satellite with highest elevation
         i=-1;
-        for j=1:ns
+        for j=1:ns  % 处理卫星数据，确保有效的数据都会被选中，更新卫星索引
             sysi=rtk.sat(sat(j)).sys;
             if ~test_sys(sysi,m),continue;end
             if ~validobs(zdr(ir(j)).y,zdb(ib(j)).y,f,nf),continue;end
-            if i<0||(zdr(ir(j)).azel(2)>zdr(ir(i)).azel(2)),i=j;end
+            if i<0||(zdr(ir(j)).azel(2)>zdr(ir(i)).azel(2)),i=j;end %搜索仰角最高
         end
         if i<0,continue;end
         
         nb(b+1)=0;
-        for j=1:ns
+        for j=1:ns %遍历卫星，进行有效性检查
             if i==j,continue;end
             sysi=rtk.sat(sat(i)).sys;
             sysj=rtk.sat(sat(j)).sys;
@@ -63,13 +63,13 @@ for m=1:5
             
             H(nv+1,:)=0;
             
-            % double-differenced residual
+            % double-differenced residual   站间差分-星间差分
             v(nv+1)=(zdr(ir(i)).y(f)-zdb(ib(i)).y(f))-(zdr(ir(j)).y(f)-zdb(ib(j)).y(f));
             
-            % partial derivatives by rover position
+            % partial derivatives by rover position 构建H阵
             H(nv+1,1:3)=-zdr(ir(i)).LOS+zdr(ir(j)).LOS;
             
-            % double-differenced ionospheric delay term
+            % double-differenced ionospheric delay term 双差电离层估计
             if opt.ionoopt==glc.IONOOPT_EST
                 fi=lami/lam_carr0; fj=lamj/lam_carr0;
                 if f<=nf,kk1=-1;else,kk1=1;end
@@ -80,7 +80,7 @@ for m=1:5
                 H(nv+1,rtk.ii+sat(j))=-didxj;
             end
             
-            % double-differenced tropospheric delay term
+            % double-differenced tropospheric delay term  双差对流层估计
             if opt.tropopt>=glc.TROPOPT_EST
                 v(nv+1)=v(nv+1)-((tropr(i)-tropr(j))-(tropb(i)-tropb(j)));
                 if opt.tropopt==glc.TROPOPT_EST,kk2=1;else,kk2=3;end
@@ -90,8 +90,8 @@ for m=1:5
                 end
             end
             
-            % double-differenced phase-bias term
-            if f<=nf
+            % double-differenced phase-bias term    双差相位偏差项
+            if f<=nf    %根据不同电离层选项计算观测残差，并相应地更新状态和H阵
                 if opt.ionoopt~=glc.IONOOPT_IFLC
                     idxi=rtk.ib+(f-1)*glc.MAXSAT+sat(i);
                     idxj=rtk.ib+(f-1)*glc.MAXSAT+sat(j);
@@ -121,7 +121,7 @@ for m=1:5
             else    ,rtk.sat(sat(j)).resp(f-nf)=v(nv+1);
             end
             
-            % test innovation
+            % test innovation 监测和记录卫星观测值的异常情况，残差超过预设的阈值，拒绝该卫星
             if opt.maxinno>0&&abs(v(nv+1))>opt.maxinno
                 if f<=nf
                     rtk.sat(sat(i)).rejc(f)=rtk.sat(sat(i)).rejc(f)+1;
@@ -130,11 +130,11 @@ for m=1:5
                 continue;
             end
             
-            % single-differenced measurement error variances
+            % single-differenced measurement error variances    噪声阵计算
             Ri(nv+1)=varerr_rel(sat(i),sysi,zdr(ir(i)).azel(2),bl,dt,f,rtk);
             Rj(nv+1)=varerr_rel(sat(j),sysj,zdr(ir(j)).azel(2),bl,dt,f,rtk);
            
-            if opt.mode>glc.PMODE_DGNSS
+            if opt.mode>glc.PMODE_DGNSS %如果是rtk，设置卫星可用计数
                 if f<=nf
                     rtk.sat(sat(i)).vsat(f)=1;
                     rtk.sat(sat(j)).vsat(f)=1;
@@ -155,7 +155,7 @@ end
 
 v(nv+1:end)=[]; H(nv+1:end,:)=[]; Ri(nv+1:end,:)=[]; Rj(nv+1:end,:)=[];
 
-R=ddcov(nb,b,Ri,Rj,nv);
+R=ddcov(nb,b,Ri,Rj,nv); %拼合噪声阵
 
 return
 

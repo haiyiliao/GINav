@@ -17,7 +17,7 @@ for m=1:5
             n=n+1;
         end
         
-        %constraint to fixed ambiguity
+        %constraint to fixed ambiguity  固定模糊度的约束
         for i=2:n
             v(nv+1)=(xa(idx(1))-xa(idx(i)))-(rtk.x(idx(1))-rtk.x(idx(i)));
             H(nv+1,idx(1))= 1;
