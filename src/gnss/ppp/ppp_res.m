@@ -18,9 +18,9 @@ rr=x(1:3)+dr;
 pos=ecef2pos(rr);
 
 nv=1;ne=0;
-for i=1:nobs
+for i=1:nobs    %一行一行构造
     
-    sat=obs(i).sat; lam=nav.lam(sat,:);lam_=[nav.lam(sat,:),nav.lam(sat+1,:)];
+    sat=obs(i).sat; lam=nav.lam(sat,:);lam_=[nav.lam(sat,:),nav.lam(sat+1,:)];  %lam用于双频无电离层组合
     if lam_(fix(j/2)+1)==0||lam(1)==0,continue;end
     
     % satellite information
@@ -40,7 +40,7 @@ for i=1:nobs
     [diono,vari,stat_i]    =model_iono(obs(i).time,pos,azel(i,:),rtk,x,nav,sat);
     if stat_t==0||stat_i==0,continue;end
     
-    % satellite and receiver antenna model
+    % satellite and receiver antenna model  ATX修正
     if opt.posopt(1)==1
         dants=satantpcv(rs,rr,nav.pcvs(sat)); 
     end
@@ -50,19 +50,21 @@ for i=1:nobs
     [rtk.sat(sat).phw,stat_tmp]=model_phw(rtk.sol.time,sat,nav.pcvs(sat).type,opt.posopt(3),rs,rr,vs,rtk.sat(sat).phw);
     if stat_tmp==0,continue;end
     
-    % gravitational delay correction
+    % gravitational delay correction    相对论修正
     if opt.posopt(7)==1
         dgrav=model_grav(sys,rr,rs);
     end
 
     % corrected phase and code measurements
-    [L,P,Lc,Pc]=corr_meas(rtk,obs(i),nav,dantr,dants,rtk.sat(sat).phw);
+    [L,P,Lc,Pc]=corr_meas(rtk,obs(i),nav,dantr,dants,rtk.sat(sat).phw); %Lc, Pc形成双频无电离层组合
+                                                                        %L, P形成非差非组合
     
+    % 根据频点构造
     j=0;
-    while j<2*nf
+    while j<2*nf    %若是非差非组合，用双频，那么一个卫星对应四个方程   %若是无电离层组合，那么一个卫星对应两个方程
         dcb=0; bias=0;
         
-        if opt.ionoopt==glc.IONOOPT_IFLC
+        if opt.ionoopt==glc.IONOOPT_IFLC    %无电离层组合
             if rem(j,2)==0,y=Lc;else,y=Pc;end
             if y==0,j=j+1;continue;end
         else
@@ -76,6 +78,7 @@ for i=1:nobs
         gama=(lam(fix(j/2)+1)/lam(1))^2;
         C=gama*ionmapf(pos,azel(i,:))*C_K1;
         
+        % H阵初始化
         H(nv,:)=zeros(1,rtk.nx);
         H(nv,1:3)=-LOS;
         
@@ -149,19 +152,19 @@ for i=1:nobs
         else          ,rtk.sat(sat).resp(fix(j/2)+1)=v(nv,1);
         end
         
-        % variance
-        var_rr=varerr_ppp(sys,azel(i,2),fix(j/2),rem(j,2),opt);
+        % variance  R阵与var挂钩
+        var_rr=varerr_ppp(sys,azel(i,2),fix(j/2),rem(j,2),opt); %接收机噪声方差与系统、截止高度角有关
         var(nv,1)=var_rr+var_rs+vart+C^2*vari;
         %if sys==glc.SYS_GLO&&rem(j,2)==1,var(nv,1)=var(nv,1)+VAR_GLO_IFB;end
             
         % reject satellite by pre-fit residuals
-        if post==0&&opt.maxinno>0&&abs(v(nv))>opt.maxinno
+        if post==0&&opt.maxinno>0&&abs(v(nv))>opt.maxinno   % 先验残差中，var过大的卫星数据剔除掉
             exc(i)=1;
             rtk.sat(sat).rejc(rem(j,2)+1)=rtk.sat(sat).rejc(rem(j,2)+1)+1;
             j=j+1; continue;
         end
          
-        % record large post-fit residuals
+        % record large post-fit residuals   -------------------------------是不是有记录剔除的卫星？
         if post~=0&&abs(v(nv))>sqrt(var(nv))*4
             obsi(ne+1)=i;frqi(ne+1)=j;ve(ne+1)=v(nv);
             ne=ne+1;
@@ -200,7 +203,7 @@ if post~=0 && ne>0
     ve(rej)=0; %#ok
 end
 
-% measurement noise matrix
+% measurement noise matrix: R
 if nv-1>0
     R=zeros(nv-1,nv-1);
     for i=1:nv-1

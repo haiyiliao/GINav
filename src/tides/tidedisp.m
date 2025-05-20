@@ -15,21 +15,21 @@ pos(1)=asin(rr(3)/norm(rr));
 pos(2)=atan2(rr(2),rr(1));
 Cne=xyz2enu(pos);
 
-% solid earth tides
+% solid earth tides 固体潮
 if bitand(opt,1)
     [rsun,rmoon,gmst]=sunmoonpos(tutc,erpv);
     drt=tide_solid(pos(1:2),Cne,rsun,rmoon,gmst,opt);
     dr=dr+drt';
 end
 
-% ocean tide loading
+% ocean tide loading    海潮
 if bitand(opt,2)
     denu=tide_oload(tut,odisp);
     drt=Cne'*denu';
     dr=dr+drt;
 end   
 
-% pole tide
+% pole tide 极移
 if bitand(opt,4)
     denu=tide_pole(tut,pos(1:2),erpv);
     drt=Cne'*denu';

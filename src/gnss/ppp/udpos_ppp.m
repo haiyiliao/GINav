@@ -3,7 +3,7 @@ function rtk=udpos_ppp(rtk)
 global glc
 VAR_POS=60^2; VAR_VEL=10^2; VAR_ACC=10^2;
 
-% for first epoch
+% for first epoch   PPP之前会做SPP，用SPP的位置作为初始历元数据，参与KF
 if sqrt(dot(rtk.x(1:3),rtk.x(1:3)))<=0
     for i=1:3
         rtk=initx(rtk,rtk.sol.pos(i),VAR_POS,i);
@@ -18,10 +18,10 @@ if sqrt(dot(rtk.x(1:3),rtk.x(1:3)))<=0
     end
 end
 
-% for ppp static mode
+% for ppp static mode   静态下，状态转移矩阵为I阵，只更新P阵
 if rtk.opt.mode==glc.PMODE_PPP_STATIC
     for i=1:3
-        rtk.P(i,i)=rtk.P(i,i)+(rtk.opt.prn(6))^2*abs(rtk.tt);
+        rtk.P(i,i)=rtk.P(i,i)+(rtk.opt.prn(6))^2*abs(rtk.tt); %Qk：(rtk.opt.prn(6))^2*abs(rtk.tt)
     end
     return;
 end

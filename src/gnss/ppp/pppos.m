@@ -38,7 +38,7 @@ rtk=udstate_ppp(rtk,obs,nav);
 % cumpute satellite position,clock bias,velocity,clock drift
 sv=satposs(obs,nav,rtk.opt.sateph);
 
-% exclude measurements of eclipsing satellite (block IIA)
+% exclude measurements of eclipsing satellite (block IIA from GPS)
 if rtk.opt.posopt(4)==1
     sv=testeclipse(obs,nav,sv);
 end
@@ -52,7 +52,7 @@ end
 while iter<=MAXITER
     
     % calculate residuals,measurement matrix,measurement noise matrix
-    [v,H,R,~,exc,nv,rtk]=ppp_res(0,rtk.x,rtk,obs,nav,sv,dr,exc);
+    [v,H,R,~,exc,nv,rtk]=ppp_res(0,rtk.x,rtk,obs,nav,sv,dr,exc);    %第一个输入参数为0：还没有经过KF
     if nv==0,break;end
     
     % debug tracing

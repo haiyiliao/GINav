@@ -20,8 +20,8 @@
 clc
 clear all %#ok
 close all
-addpath(genpath(pwd))
-global_variable;
+addpath(genpath(pwd))   %加载整个项目的文件进入路径中
+global_variable;    %全局变量
 
 % execute GINavCfg to configure input file
 [opt,file,gui_flag]=GINavCfg;

@@ -24,8 +24,8 @@ while 1
 
     if ti>tspan,break;end   %读完了观测数据的时间跨度，跳出循环
     
-    % search rover obs  搜索正在处理的rover观测数据，并返回可用卫星数目
-    [obsr_,nobs,obsr]=searchobsr(obsr);
+    % search rover obs  rover观测数据处理
+    [obsr_,nobs,obsr]=searchobsr(obsr); % obsr为rover所有历元的数据，obsr_为取出其中一个历元的数据，nobs为该历元的卫星数
     if nobs<0   %若卫星数<0，更新等待条并跳出循环
         str=sprintf('Processing... %.1f%%',100);
         waitbar(ti/tspan,hbar,str);

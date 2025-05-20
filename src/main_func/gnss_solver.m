@@ -19,8 +19,8 @@ if opt.mode==glc.PMODE_SPP||opt.mode>=glc.PMODE_PPP_KINEMA
     end
 end
 
-% standard point positioning    SPP处理，若不需要继续处理，则return
-[rtk,stat0]=sppos(rtk,obsr,nav);
+% standard point positioning    
+[rtk,stat0]=sppos(rtk,obsr,nav); % SPP处理，若不需要继续处理，则return
 if stat0==0,return;end
 
 if time.time~=0,rtk.tt=timediff(rtk.sol.time,time);end   
@@ -29,14 +29,14 @@ if opt.mode==glc.PMODE_SPP,return;end
 % suppress output of single solution
 rtk.sol.stat=glc.SOLQ_NONE;
 
-if opt.mode>=glc.PMODE_PPP_KINEMA   %进入PPP处理
+if opt.mode>=glc.PMODE_PPP_KINEMA
     % scan obs for ppp
     [obsr,nobs]=scan_obs_ppp(obsr);
     if nobs==0,stat0=0;return;end
-    % repair receiver clock jump (only for GPS)
+    % repair receiver clock jump (only for GPS) %%%%%%%%%%%%%%%%%%%%%%%%%%% 实习能不能参考这个？
     [rtk,obsr]=clkrepair(rtk,obsr,nav);
     % precise point psitioning
-    [rtk,stat0]=pppos(rtk,obsr,nav);
+    [rtk,stat0]=pppos(rtk,obsr,nav); % PPP处理
     return;
 end
 

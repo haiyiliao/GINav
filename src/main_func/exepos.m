@@ -13,7 +13,7 @@ rtk=gls.rtk; %rtk是在记录解的形式？
 % read input file   读取输入文件
 [obsr,obsb,nav,imu]=read_infile(opt,file);
 
-% initlize output file  输出文件
+% initlize output file  初始化输出文件
 rtk=initoutfile(rtk,opt,file,obsr);
 
 % high efficiency by converting struct to matrix
