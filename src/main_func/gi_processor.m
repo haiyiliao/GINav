@@ -6,16 +6,23 @@ function gi_processor(rtk,opt,obsr,obsb,nav,imu)
 %8/12/2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global glc gls
-ins_align_flag=0; ins_realign_flag=0; ti=0;
-rtk_align_falg=0; MAX_GNSS_OUTAGE=30;
+ins_align_flag=0;  %INS初始对准标志
+ins_realign_flag=0; %INS重对准标志
+ti=0; %时间索引
+rtk_align_falg=0; %RTK对准标志
+MAX_GNSS_OUTAGE=30; %GNSS中断最大时间
 oldobstime=gls.gtime;
 
 hbar=waitbar(0,'Preparation...','Name','GINav', 'CreateCancelBtn', 'delete(gcbf);');
 H=get(0,'ScreenSize'); w=600; h=450; x=H(3)/2-w/2; y=H(4)/2-h/2; 
 hfig=figure;set(gcf,'Position',[x y w h]);
 
-% initialize rtk_align sturct
-rtk_align=initrtk(rtk,opt);
+% initialize rtk_align sturct   初始化一个与rtk_align相关的结构体
+rtk_align=initrtk(rtk,opt); % 通过initrtk()传入rtk和opt，利用函数内部预设的逻辑
+                            % 来对rtk_align结构体进行初始化复制，使其包含符合后续
+                            % 处理流程要求的初始状态信息、配置参数等内容，为接下来
+                            % 涉及到rtk_align的相关操作（例如RTK数据对齐、与其他
+                            % 导航数据融合时的对齐处理等）做好准备
 
 % set time span
 tspan=timespan(rtk_align,obsr);
@@ -26,7 +33,7 @@ while 1
     if ti+1>tspan,break;end
     
     % search imu data
-    [imud,imu,stat]=searchimu(imu);
+    [imud,imu,stat]=searchimu(imu); %每次取一个imu数据
     if stat==0
         str=sprintf('Processing... %.1f%%',100*tspan/tspan);
         waitbar(tspan/tspan,hbar,str);
@@ -34,12 +41,12 @@ while 1
     end
     
     % match rover obs
-    [obsr_,nobsr]=matchobs(rtk_align,imud,obsr);
+    [obsr_,nobsr]=matchobs(rtk_align,imud,obsr); %匹配rover观测数据，返回匹配后的观测数据obsr_和数量nobsr
     
     % match base obs
     if (opt.mode==glc.PMODE_DGNSS||opt.mode==glc.PMODE_KINEMA)&&nobsr~=0
-        [obsb_,nobsb]=searchobsb(obsb,obsr_(1).time);
-        if nobsb~=0,[obsb_,~]=exclude_sat(obsb_,rtk_align);end
+        [obsb_,nobsb]=searchobsb(obsb,obsr_(1).time);   %搜索BS观测数据
+        if nobsb~=0,[obsb_,~]=exclude_sat(obsb_,rtk_align);end  %剔除卫星
     else
         obsb_=NaN;
     end
@@ -51,9 +58,9 @@ while 1
         
         % aviod duplicate observations
         if (oldobstime.time~=0&&timediff(oldobstime,obsr_(1).time)==0)...
-                ||obsr_(1).time.sec~=0
-            if ins_align_flag~=0
-                ins=ins_mech(ins,imud);
+                ||obsr_(1).time.sec~=0 %避免重复观测
+            if ins_align_flag~=0    %对准检查
+                ins=ins_mech(ins,imud); %机械编排，输出INS导航信息
                 ins=ins_time_updata(ins);
             end
             oldobstime=obsr_(1).time;

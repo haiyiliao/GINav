@@ -47,7 +47,7 @@ else
     
 end
 
-rtk.nx=NX; rtk.na=NR;
+rtk.nx=NX; rtk.na=NR; % NX：待估参数。 NR：除偏差相关参数外的其它参数
 rtk.x=zeros(rtk.nx,1);
 rtk.P=zeros(rtk.nx,rtk.nx);
 rtk.xa=zeros(rtk.na,1);

@@ -19,7 +19,7 @@ rtk=initoutfile(rtk,opt,file,obsr);
 % high efficiency by converting struct to matrix
 obsr=adjobs(obsr,opt);
 obsb=adjobs(obsb,opt);
-nav =adjnav(nav,opt); 
+nav =adjnav(nav,opt);
 
 % set base position for relative positioning mode   读取BS坐标
 if opt.mode>=glc.PMODE_DGNSS&&opt.mode<=glc.PMODE_STATIC
