@@ -41,26 +41,27 @@ ins.eth = earth_update(pos_mid,vel_mid);  %更新与地球相关的参数
 ins.wib = dw/ins.nt; %b系下的角速度
 ins.fb  = dv/ins.nt; %b系下的加速度
 ins.fn  = ins.Cnb*ins.fb; %加速度坐标系转换b→n
-ins.web = ins.wib-ins.Cnb'*ins.eth.wnie; %计算b系相对于e系的角速度
+ins.web = ins.wib-ins.Cnb'*ins.eth.wnie; %计算b系相对于e系的角速度，用于后续对速度、位置等状态更新
 
-% update velocity 
-dv_rot  = 0.5*cross(dw0,dv0);
+% update velocity
+dv_rot  = 0.5*cross(dw0,dv0); %角速度增量dw0和线加速度增量dv0叉乘，并乘上一个系数得到旋转加速度项dv_rot
 dv_scul = 1/12*(cross(old_dw,dv0)+cross(old_dv,dw0));
 dv_sf   = (eye(3)-0.5*ins.nt*askew(ins.eth.wnin))*ins.Cnb*dv + ins.Cnb*(dv_rot+dv_scul);
 dv_cor  = ins.eth.gcc*ins.nt;
-vel_new = ins.vel+dv_sf+dv_cor;
+vel_new = ins.vel+dv_sf+dv_cor; % 陈凯论文公式3-14
+                                % 当前速度+综合速度更新项+重力引起的速度修正项
 
 % update position 
 ins.Mpv(2) = ins.eth.Mpv2;
 ins.Mpv(4) = ins.eth.Mpv4;
-pos_new    = ins.pos + ins.Mpv*(ins.vel+vel_new)/2*ins.nt; 
+pos_new    = ins.pos + ins.Mpv*(ins.vel+vel_new)/2*ins.nt;  % 陈凯论文公式3-18
 
 % update attitude 
 dw_cone  = 1/12*cross(old_dw,dw0);
 phi_b_ib = dw+dw_cone;
 phi_n_in = ins.eth.wnin*ins.nt;
-Cbb = rvec2mat(phi_b_ib);
-Cnn = rvec2mat(phi_n_in)';
+Cbb = rvec2mat(phi_b_ib);   % 陈凯论文公式3-22
+Cnn = rvec2mat(phi_n_in)';  % 陈凯论文公式3-22
 Cnb_new = Cnn*ins.Cnb*Cbb;
 att_new = Cnb2att(Cnb_new);
 

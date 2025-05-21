@@ -16,15 +16,15 @@ global glc
 ins=rtk_gi.ins; opt=rtk_gnss.opt; stat=1;
 VAR_POS=10^2; VAR_VEL=0.15^2; MAX_DPOS=10; MAX_DVEL=5; 
 
-% XYZ to BLH
+% XYZ to BLH    GNSS位置从XYZ转换为BLH
 rr=rtk_gnss.sol.pos'; 
-[pos_GNSS,Cne]=xyz2blh(rr); 
+[pos_GNSS,Cne]=xyz2blh(rr); % 得到转换矩阵Cne
 
-% VE to VN
+% VE to VN  GNSS位置转换
 ve=rtk_gnss.sol.vel; 
 vel_GNSS=Cne*ve';
 
-% XYZ variance to BLH variance
+% XYZ variance to BLH variance  位置方差转换
 posP=rtk_gnss.sol.posP; T=Dblh2Dxyz(pos_GNSS);
 P=[posP(1) posP(4) posP(6);
     posP(4) posP(2) posP(5);
@@ -36,7 +36,7 @@ else
     VAR1=[P(1,1);P(2,2);P(3,3)];
 end
 
-% VE variance to VN variance
+% VE variance to VN variance    速度方差转换
 velP=rtk_gnss.sol.velP; 
 P=[velP(1) velP(4) velP(6);
     velP(4) velP(2) velP(5);

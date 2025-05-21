@@ -58,19 +58,23 @@ while 1
         
         % aviod duplicate observations
         if (oldobstime.time~=0&&timediff(oldobstime,obsr_(1).time)==0)...
-                ||obsr_(1).time.sec~=0 %避免重复观测
-            if ins_align_flag~=0    %对准检查
-                ins=ins_mech(ins,imud); %机械编排，输出INS导航信息
-                ins=ins_time_updata(ins);
+                ||obsr_(1).time.sec~=0 % 避免重复观测：（如果上一次观测时间不为零&&与当前观测时间相同）||当前观测时间秒数不为零
+            if ins_align_flag~=0    % 对准检查
+                ins=ins_mech(ins,imud); % 力学更新：机械编排，输出INS导航信息
+                ins=ins_time_updata(ins);   % 时间更新
+                % 上面两个式子属于KF状态部分更新（外推）。INS的时间相关性更强，因此用于KF状态部分更新
+
             end
-            oldobstime=obsr_(1).time;
+            oldobstime=obsr_(1).time;   % 更新上一次观测时间，并直接到下一次循环
             continue;
         end
-        oldobstime=obsr_(1).time;
+        oldobstime=obsr_(1).time; % 更新上一次观测时间
 
         if ins_align_flag==0
             % INS initial alignment
             [rtk_align,ins_align_flag]=ins_align(rtk_align,obsr_,obsb_,nav);
+            % roll、pitch置零，yaw用动态对准，载体熟读大于5米每秒，用e系速度除以n系速度得到tan航向
+
             if ins_align_flag==1
                 ins=rtk_align.ins;
                 rtk_gi=gi_initrtk(rtk,opt,rtk_align);
@@ -83,7 +87,7 @@ while 1
                 rtk_gi=ins2sol(rtk_gi,ins);
                 outsol(rtk_gi);
                 
-                % kinematic plot
+                % kinematic plot    运动轨迹绘制
                 plot_trajectory_kine(hfig,rtk_gi);
                 fprintf('Info:INS initial alignment ok\n');
                 
@@ -91,12 +95,12 @@ while 1
                 ins.oldpos=ins.pos;
                 ins.oldobsr=obsr_;
                 ins.oldobsb=obsb_;
-            else
+            else    %初始对准失败，则绘制相关图形
                 % kinematic plot
                 plot_trajectory_kine(hfig,rtk_align);
             end
         else
-            % INS re-alignment
+            % INS re-alignment 重对准
             gi_time=rtk_gi.gi_time;
             if gi_time.time~=0&&abs(timediff(ins.time,gi_time))>MAX_GNSS_OUTAGE
                 if rtk_align_falg==0
@@ -131,20 +135,21 @@ while 1
                     continue;
                 end
                 
+                % 如果重新对准失败，则输出警告信息
                 % use INS solutions before re-alignment
                 fprintf('Warning:GPS week = %d sow = %.3f,GNSS outage!\n',week,sow);
-                ins=ins_mech(ins,imud);
-                ins=ins_time_updata(ins);
+                ins=ins_mech(ins,imud); %力学更新
+                ins=ins_time_updata(ins); %时间更新
                 rtk_gi.ngnsslock=0;
                 
-                % write solution to output file
+                % write solution to output file INS解算结果写入输出文件
                 rtk_gi=ins2sol(rtk_gi,ins);
                 outsol(rtk_gi);
 
-                % kinematic plot
+                % kinematic plot 绘制运动轨迹
                 plot_trajectory_kine(hfig,rtk_gi);
                 
-                % record previous information
+                % record previous information 记录先前的信息
                 ins.oldpos=ins.pos;
                 ins.oldobsr=obsr_;
                 ins.oldobsb=obsb_;
@@ -157,7 +162,7 @@ while 1
             
             rtk_gi=ins2sol(rtk_gi,ins);
             
-            % GNSS measurement update
+            % GNSS measurement update   GNSS不同时刻的噪声无规律，因此，用GNSS+INS进行KF观测部分更新
             rtk_gi.ins=ins;
             if opt.ins.mode==glc.GIMODE_LC
                 % GNSS/INS loosely couple

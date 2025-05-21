@@ -6,10 +6,10 @@ function [rtk_gi,rtk_gnss,stat0]=gi_Loose(rtk_gi,rtk_gnss,obsr,obsb,nav)
 %8/12/2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global glc
-[rtk_gnss,~]=gnss_solver(rtk_gnss,obsr,obsb,nav);
+[rtk_gnss,~]=gnss_solver(rtk_gnss,obsr,obsb,nav); %从GNSS里获取位置、速度
 
 if rtk_gnss.sol.stat~=glc.SOLQ_NONE
-    [rtk_gi,rtk_gnss,stat0]=gnss_ins_lc(rtk_gi,rtk_gnss);
+    [rtk_gi,rtk_gnss,stat0]=gnss_ins_lc(rtk_gi,rtk_gnss); %KF
 else
     stat0=0;
 end
