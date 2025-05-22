@@ -50,7 +50,8 @@ while 1
     else
         obsb_=NaN;
     end
-
+    
+    %% 数据准备好后，检查rover数据，有数据就做组合导航
     if nobsr~=0
         ti=ti+1;
         str=sprintf('Processing... %.1f%%',100*ti/tspan);
@@ -69,7 +70,8 @@ while 1
             continue;
         end
         oldobstime=obsr_(1).time; % 更新上一次观测时间
-
+        
+        % ins align check
         if ins_align_flag==0
             % INS initial alignment
             [rtk_align,ins_align_flag]=ins_align(rtk_align,obsr_,obsb_,nav);
@@ -99,10 +101,10 @@ while 1
                 % kinematic plot
                 plot_trajectory_kine(hfig,rtk_align);
             end
-        else
+        else %已经对准
             % INS re-alignment 重对准
             gi_time=rtk_gi.gi_time;
-            if gi_time.time~=0&&abs(timediff(ins.time,gi_time))>MAX_GNSS_OUTAGE
+            if gi_time.time~=0&&abs(timediff(ins.time,gi_time))>MAX_GNSS_OUTAGE %超时就重对准
                 if rtk_align_falg==0
                     rtk_align=initrtk(rtk,opt);
                     rtk_align_falg=1;

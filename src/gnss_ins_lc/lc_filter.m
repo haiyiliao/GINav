@@ -13,7 +13,7 @@ K=P_pre*H'*Q^-1;
 x=K*v;
 P=(eye(nx)-K*H)*P_pre;
 
-if ~isreal(x)||~isreal(P)
+if ~isreal(x)||~isreal(P) %若x或P不是实数，则表示滤波失败
     stat=0;
 end
 

@@ -29,11 +29,11 @@ posP=rtk_gnss.sol.posP; T=Dblh2Dxyz(pos_GNSS);
 P=[posP(1) posP(4) posP(6);
     posP(4) posP(2) posP(5);
     posP(6) posP(5) posP(3)];
-if max(diag(P))>VAR_POS
+if max(diag(P))>VAR_POS % 如果最大的对角元素大于设定的位置方差阈值，则位置rr置零
     rr=zeros(3,1);
 else
     P=T^-1*P*(T')^-1;
-    VAR1=[P(1,1);P(2,2);P(3,3)];
+    VAR1=[P(1,1);P(2,2);P(3,3)]; % 提取对角线元素做微信的方差
 end
 
 % VE variance to VN variance    速度方差转换
@@ -51,36 +51,37 @@ else
     end
 end
 
-% lever arm correction for position and velocity
+% lever arm correction for position and velocity 杆臂修正
 pos_INS=ins.pos+ins.Mpv*ins.Cnb*ins.lever;
 vel_INS=ins.vel+ins.Cnb*askew(ins.web)*ins.lever;
 
 % exclude large gross errors
-if rtk_gi.ngnsslock>10&&norm(rr)~=0
+% 锁定次数大于10，且GNSS位置和速度不为零，检查是否存在大的粗差
+if rtk_gi.ngnsslock>10&&norm(rr)~=0 
     rr_INS=blh2xyz(pos_INS); dpos=abs(rr_INS-rr); 
-    if max(dpos)>MAX_DPOS
+    if max(dpos)>MAX_DPOS % 如果位置偏差大于最大位置偏差阈值，则位置置零
         rr=zeros(3,1);
     end
 end
 if rtk_gi.ngnsslock>10&&norm(ve)~=0
     dvel=abs(vel_INS-vel_GNSS);
-    if max(dvel)>MAX_DVEL
+    if max(dvel)>MAX_DVEL % 如果速度偏差大于最大速度偏差阈值，则速度置零
         ve=zeros(3,1);
     end
 end
 
 % calculate v,H and R
-if norm(rr)~=0&&norm(ve)~=0
+if norm(rr)~=0&&norm(ve)~=0 % 位置和速度的模都不为零，就计算v, H, R
     v1=pos_INS-pos_GNSS'; v2=vel_INS-vel_GNSS; 
     if opt.mode==glc.PMODE_SPP||(opt.mode==glc.PMODE_DGNSS&&opt.dynamics==1)||...
             (opt.mode==glc.PMODE_KINEMA&&opt.dynamics==1)||...
             (opt.mode==glc.PMODE_PPP_KINEMA&&opt.dynamics==1)
-        v=[v1;v2];
-        R1=diag(VAR1); R2=diag(VAR2); R=blkdiag(R1,R2);
+        v=[v1;v2]; % 陈凯论文公式4-22
+        R1=diag(VAR1); R2=diag(VAR2); R=blkdiag(R1,R2); % 陈凯论文公式4-24
         H=zeros(6,15);
         H(1,7)=1;H(2,8)=1;H(3,9)=1;
         H(4,4)=1;H(5,5)=1;H(6,6)=1;
-    else
+    else %非动态
         v=pos_INS-pos_GNSS';
         R=diag(VAR1);
         H=zeros(3,15);
@@ -106,7 +107,7 @@ elseif norm(rr)==0&&norm(ve)==0
     stat=0;
 end
 
-% IGG-3 robust model, only for SPP/INS mode
+% IGG-3 robust model, only for SPP/INS mode 抗差估计
 if opt.ins.aid(2)==1&&opt.mode==glc.PMODE_SPP&&stat==1&&rtk_gi.ngnsslock>10
     
     Q=H*ins.P*H'+R;
