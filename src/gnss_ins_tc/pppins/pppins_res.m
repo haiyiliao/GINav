@@ -13,19 +13,19 @@ for i=1:glc.MAXSAT
     end
 end
 
-pos=x(7:9);
+pos=x(7:9); %前六个分别是姿态和速度
 Cnb=rtk.ins.Cnb; [~,Cen]=blh2xyz(pos); lever=Cen*Cnb*rtk.ins.lever;
 C_phi=askew(lever); % coefficient for phi-angle
 
 % lever arm correction
-rr=blh2xyz(pos)+lever; 
+rr=blh2xyz(pos)+lever;  %pos是INS的位置（纬经高），要推到GNSS的位置（ECEF）
 
 % earth tide correction
 rr=rr+dr; 
 
 
 nv=1;ne=0;
-for i=1:nobs
+for i=1:nobs %用循环构造H阵，一个obs对应两个方程
     
     sat=obs(i).sat; lam=nav.lam(sat,:);lam_=[nav.lam(sat,:),nav.lam(sat+1,:)];
     if lam_(fix(j/2)+1)==0||lam(1)==0,continue;end
@@ -34,9 +34,10 @@ for i=1:nobs
     rs=sv(i).pos; dts=sv(i).dts; var_rs=sv(i).vars; vs=sv(i).vel; svh=sv(i).svh;
 
     % distance/light of sight/azimuth/elevation
-    [r,LOS]=geodist(rs,rr); azel(i,:)=satazel(pos,LOS);
+    [r,LOS]=geodist(rs,rr); azel(i,:)=satazel(pos,LOS); %LOS：陈凯论文里的u_r
     if r<=0||azel(i,2)<opt.elmin,continue;end
     
+    % exclude satellites
     [sys,~]=satsys(sat);
     if sys==0||satexclude(sat,var_rs,svh,opt)==0||exc(i)==1
         exc(i)=1; continue;
@@ -44,7 +45,7 @@ for i=1:nobs
     
     % tropospheric and ionospheric model
     [dtdx,dtrop,vart,stat_t]=model_trop(obs(i).time,pos,azel(i,:),rtk,x,nav);
-    [diono,vari,stat_i]    =model_iono(obs(i).time,pos,azel(i,:),rtk,x,nav,sat);
+    [diono,vari,stat_i]    =model_iono(obs(i).time,pos,azel(i,:),rtk,x,nav,sat); %IF组合不用估计iono
     if stat_t==0||stat_i==0,continue;end
     
     % satellite and receiver antenna model
@@ -64,7 +65,7 @@ for i=1:nobs
     end
 
     % corrected phase and code measurements
-    [L,P,Lc,Pc]=corr_meas(rtk,obs(i),nav,dantr,dants,rtk.sat(sat).phw);
+    [L,P,Lc,Pc]=corr_meas(rtk,obs(i),nav,dantr,dants,rtk.sat(sat).phw); %Lc、Pc是双频构成的单个观测值
     
     j=0;
     while j<2*nf
@@ -152,10 +153,11 @@ for i=1:nobs
             if bias==0,j=j+1;continue;end
             H(nv,rtk.ib+fix(j/2)*MAXSAT+sat)=1;
         end
+        %------------- 到这里，H矩阵构造完毕 ----------------%
         
         % residual
         dtS=dts*glc.CLIGHT;
-        v(nv,1)=y-(r+dtr-dtS+dtrop+C*diono+dcb+bias-dgrav);
+        v(nv,1)=y-(r+dtr-dtS+dtrop+C*diono+dcb+bias-dgrav); %y：GNSS数据，r：INS数据
      
         if rem(j,2)==0,rtk.sat(sat).resc(fix(j/2)+1)=v(nv,1);
         else          ,rtk.sat(sat).resp(fix(j/2)+1)=v(nv,1);
@@ -165,14 +167,14 @@ for i=1:nobs
         var_rr=varerr_ppp(sys,azel(i,2),fix(j/2),rem(j,2),opt);
         var(nv,1)=var_rr+var_rs+vart+C^2*vari;
         %if sys==glc.SYS_GLO&&rem(j,2)==1,var(nv,1)=var(nv,1)+VAR_GLO_IFB;end
-            
-        % reject satellite by pre-fit residuals
+        
+        % reject satellite by pre-fit residuals 可以通过INS确认GNSS数据是否可信
         if post==0&&opt.maxinno>0&&abs(v(nv))>opt.maxinno
             exc(i)=1;
             rtk.sat(sat).rejc(rem(j,2)+1)=rtk.sat(sat).rejc(rem(j,2)+1)+1;
             j=j+1; continue;
         end
-         
+        
         % record large post-fit residuals
         if post~=0&&abs(v(nv))>sqrt(var(nv))*4
             obsi(ne+1)=i;frqi(ne+1)=j;ve(ne+1)=v(nv);

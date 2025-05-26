@@ -41,7 +41,7 @@ end
 while iter<=MAXITER
     
     % calculate residuals,measurement matrix,measurement noise matrix
-    [v,H,R,~,exc,nv,rtk]=pppins_res(0,rtk.x,rtk,obs,nav,sv,dr,exc);
+    [v,H,R,~,exc,nv,rtk]=pppins_res(0,rtk.x,rtk,obs,nav,sv,dr,exc); %v=z-Hx
     if nv==0,break;end
 
     % measurement update
@@ -55,6 +55,7 @@ while iter<=MAXITER
     % calculate posteriori residuals,validate the solution
     [~,~,~,~,exc,stat,rtk]=pppins_res(iter,x,rtk,obs,nav,sv,dr,exc);
     iter=iter+1;
+    %---------------------- 不滤波太多次，怕收敛不了 ------------------
     
     if stat==1
         rtk.x=x; rtk.P=P; break;
@@ -76,7 +77,6 @@ if stat==1
     
     % update solution
     rtk=update_stat_pppins(rtk,obs,glc.SOLQ_PPP);
-    
 end
 
 return
