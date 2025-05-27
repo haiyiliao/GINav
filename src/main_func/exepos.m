@@ -7,7 +7,7 @@ function exepos(opt,file)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
 
-global glc gls
+global glc gls % glc：常量。gls：过程变量
 rtk=gls.rtk; %rtk是在记录解的形式？
 
 % read input file   读取输入文件
