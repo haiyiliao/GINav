@@ -55,15 +55,14 @@ end
 pos_INS=ins.pos+ins.Mpv*ins.Cnb*ins.lever;
 vel_INS=ins.vel+ins.Cnb*askew(ins.web)*ins.lever;
 
-% exclude large gross errors
-% 锁定次数大于10，且GNSS位置和速度不为零，检查是否存在大的粗差
-if rtk_gi.ngnsslock>10&&norm(rr)~=0 
+% exclude large gross errors 检查是否存在大的粗差
+if rtk_gi.ngnsslock>10&&norm(rr)~=0  %锁定次数大于10，且GNSS位置不为零
     rr_INS=blh2xyz(pos_INS); dpos=abs(rr_INS-rr); 
     if max(dpos)>MAX_DPOS % 如果位置偏差大于最大位置偏差阈值，则位置置零
         rr=zeros(3,1);
     end
 end
-if rtk_gi.ngnsslock>10&&norm(ve)~=0
+if rtk_gi.ngnsslock>10&&norm(ve)~=0 %锁定次数大于10，且GNSS速度不为零
     dvel=abs(vel_INS-vel_GNSS);
     if max(dvel)>MAX_DVEL % 如果速度偏差大于最大速度偏差阈值，则速度置零
         ve=zeros(3,1);
@@ -145,7 +144,7 @@ end
 
 if stat==1
     % measurement update
-    [ins,stat]=lc_filter(v,H,R,ins.x,ins.P,ins);
+    [ins,stat]=lc_filter(v,H,R,ins.x,ins.P,ins); %EKF
     if stat==0
         [week,sow]=time2gpst(rtk.sol.time);
         fprintf('Warning:GPS week = %d sow = %.3f,filter failed!\n',week,sow);

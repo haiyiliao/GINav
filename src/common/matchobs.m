@@ -6,9 +6,9 @@ time0=obss.data(:,1)+obss.data(:,2);
  
 time1=imud.time.time+imud.time.sec;
 
-idx=abs(time1-time0)<(0.501/imu_sample_rate);
+idx=abs(time1-time0)<(0.501/imu_sample_rate); % 时间差很小==匹配
 
-if any(idx)
+if any(idx) %若存在非零元素
     obs0=obss.data(idx,:);  nobs=size(obs0,1);
 else
     obs=NaN; nobs=0; return;

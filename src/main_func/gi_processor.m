@@ -8,7 +8,7 @@ function gi_processor(rtk,opt,obsr,obsb,nav,imu)
 global glc gls
 ins_align_flag=0;  %INS初始对准标志
 ins_realign_flag=0; %INS重对准标志
-ti=0; %时间索引
+ti=0; %GNSS时间索引
 rtk_align_falg=0; %RTK对准标志
 MAX_GNSS_OUTAGE=30; %GNSS中断最大时间
 oldobstime=gls.gtime;
@@ -41,7 +41,7 @@ while 1
     end
     
     % match rover obs
-    [obsr_,nobsr]=matchobs(rtk_align,imud,obsr); %匹配rover观测数据，返回匹配后的观测数据obsr_和数量nobsr
+    [obsr_,nobsr]=matchobs(rtk_align,imud,obsr); %返回匹配后的观测数据obsr_和数量nobsr
     
     % match base obs
     if (opt.mode==glc.PMODE_DGNSS||opt.mode==glc.PMODE_KINEMA)&&nobsr~=0
@@ -59,15 +59,15 @@ while 1
         
         % aviod duplicate observations
         if (oldobstime.time~=0&&timediff(oldobstime,obsr_(1).time)==0)...
-                ||obsr_(1).time.sec~=0 % 避免重复观测：（如果上一次观测时间不为零&&与当前观测时间相同）||当前观测时间秒数不为零
-            if ins_align_flag~=0    % 对准检查
+                ||obsr_(1).time.sec~=0 % 如果上次观测时间不为零&&与当前观测时间相同）||当前观测时间秒数不为零
+            if ins_align_flag~=0    % 初始对准检查
                 ins=ins_mech(ins,imud); % 力学更新：机械编排，输出INS导航信息
                 ins=ins_time_updata(ins);   % 时间更新
-                % 上面两个式子属于KF状态部分更新（外推）。INS的时间相关性更强，因此用于KF状态部分更新
+                % 上面两个式子属于KF状态部分更新（预测阶段）。INS的时间相关性更强，因此用于KF状态部分更新
 
             end
-            oldobstime=obsr_(1).time;   % 更新上一次观测时间，并直接到下一次循环
-            continue;
+            oldobstime=obsr_(1).time;   % 更新上一次观测时间
+            continue; % 并回到循环头
         end
         oldobstime=obsr_(1).time; % 更新上一次观测时间
         
@@ -75,13 +75,13 @@ while 1
         if ins_align_flag==0
             % INS initial alignment
             [rtk_align,ins_align_flag]=ins_align(rtk_align,obsr_,obsb_,nav);
-            % roll、pitch置零，yaw用动态对准，载体熟读大于5米每秒，用e系速度除以n系速度得到tan航向
+            % roll、pitch置零，yaw用动态对准，载体速度大于5米每秒，用e系速度除以n系速度得到tan航向
 
             if ins_align_flag==1
                 ins=rtk_align.ins;
                 rtk_gi=gi_initrtk(rtk,opt,rtk_align);
                 if opt.ins.mode==glc.GIMODE_LC
-                    rtk_gnss=rtk_align;
+                    rtk_gnss=rtk_align; %----------------------------------
                 end
                 
                 % write solution to output file
@@ -101,7 +101,7 @@ while 1
                 % kinematic plot
                 plot_trajectory_kine(hfig,rtk_align);
             end
-        else %已经对准
+        else %已经初始对准
             % INS re-alignment 重对准
             gi_time=rtk_gi.gi_time;
             if gi_time.time~=0&&abs(timediff(ins.time,gi_time))>MAX_GNSS_OUTAGE %超时就重对准
@@ -109,7 +109,7 @@ while 1
                     rtk_align=initrtk(rtk,opt);
                     rtk_align_falg=1;
                 end
-                [rtk_align,ins_realign_flag]=ins_align(rtk_align,obsr_,obsb_,nav);
+                [rtk_align,ins_realign_flag]=ins_align(rtk_align,obsr_,obsb_,nav); %
                 if ins_realign_flag==1
                     % bg and ba are not reset
                     bg=ins.bg; ba=ins.ba;
@@ -201,8 +201,9 @@ while 1
         
         % If GNSS is not available, use the INS solutions
         time1=ins.time.time+ins.time.sec;
-        time2=round(ins.time.time+ins.time.sec);
-        if nobsr<=0&&abs(time1-time2)<(0.501/rtk_gi.opt.ins.sample_rate)
+        time2=round(ins.time.time+ins.time.sec); %-------------------------为啥要判断INS时间是否接近整数？
+        if nobsr<=0&&abs(time1-time2)<(0.501/rtk_gi.opt.ins.sample_rate) % 若无rover观测数据，且时间接近整数
+                                                                         % 说明GNSS不可用，只能使用INS解
             ti=ti+1;
             str=sprintf('Processing... %.1f%%',100*ti/tspan);
             waitbar(ti/tspan,hbar,str);

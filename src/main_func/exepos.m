@@ -13,7 +13,7 @@ rtk=gls.rtk; %rtk是在记录解的形式？
 % read input file   读取输入文件
 [obsr,obsb,nav,imu]=read_infile(opt,file);
 
-% initlize output file  初始化输出文件
+% initlize output file  创建结果文件，根据定位模式和测站名，输出结果文件头
 rtk=initoutfile(rtk,opt,file,obsr);
 
 % high efficiency by converting struct to matrix
@@ -21,12 +21,12 @@ obsr=adjobs(obsr,opt);
 obsb=adjobs(obsb,opt);
 nav =adjnav(nav,opt);
 
-% set base position for relative positioning mode   读取BS坐标
+% set base position for relative positioning mode   差分定位读取BS坐标
 if opt.mode>=glc.PMODE_DGNSS&&opt.mode<=glc.PMODE_STATIC
     rtk=baserefpos(rtk,opt,obsb,nav);
 end
 
-% set anttena parameter for satellite and reciever  DCB校正
+% set anttena parameter for satellite and reciever  不是SPP就做DCB校正，设置好天线
 if opt.mode~=glc.PMODE_SPP
     nav=L2_L5pcv_copy(nav);
     if isfield(obsr,'sta'),stas(1)=obsr.sta;end

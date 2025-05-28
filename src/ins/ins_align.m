@@ -5,7 +5,7 @@ function [rtk,ins_align_flag]=ins_align(rtk,obsr_,obsb_,nav)
 global glc
 ins_align_flag=0;
 
-if norm(rtk.sol.pos)~=0
+if norm(rtk.sol.pos)~=0 %位置不是[0 0 0]
     [vel,ins_align_flag]=tdcp2vel(rtk,nav,obsr_,rtk.oldobsr);
 end
 
