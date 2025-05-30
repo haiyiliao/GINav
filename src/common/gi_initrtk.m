@@ -2,6 +2,8 @@ function rtk=gi_initrtk(rtk,opt,rtk_align)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Copyright(c) 2020-2025, by Kai Chen, All rights reserved.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%% INS/GNSS相关rtk更新 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 global glc gls
 
 if opt.ins.mode==glc.GIMODE_LC

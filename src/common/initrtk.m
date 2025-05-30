@@ -1,10 +1,11 @@
 function rtk=initrtk(rtk,opt)
+%%%%%%%%%%%%%%%%%%% 通过opt修改rtk内参数 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 global glc
 rtk.opt=opt;
 rtk.opt.ts=str2time(rtk.opt.ts); 
 rtk.opt.te=str2time(rtk.opt.te);
-rtk.mask=set_sysmask(opt.navsys);   
+rtk.mask=set_sysmask(opt.navsys);
 
 if opt.mode<=glc.PMODE_STATIC
     if opt.ionoopt==glc.IONOOPT_IFLC,NF=1;else,NF=opt.nf;end

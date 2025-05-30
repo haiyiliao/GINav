@@ -6,7 +6,7 @@ function [rtk,stat]=gi_Tight(rtk,obsr,obsb,nav)
 %8/12/2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global glc
-opt=rtk.opt; time=rtk.gi_time; 
+opt=rtk.opt; time=rtk.gi_time;
 if time.time~=0,rtk.tt=timediff(obsr(1).time,time);end
 
 if opt.mode==glc.PMODE_SPP||opt.mode>=glc.PMODE_PPP_KINEMA

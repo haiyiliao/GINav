@@ -1,4 +1,5 @@
 function tspan=timespan(rtk,obsr)
+%%%%%%%%%%%%%%%%%%%% 从obsr中计算GNSS数据的时间范围 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 conf_ts=rtk.opt.ts; conf_te=rtk.opt.te;
 obs_ts.time=obsr.data(1,1); obs_ts.sec=obsr.data(1,2);
