@@ -20,7 +20,7 @@ VAR_POS=10^2; VAR_VEL=0.15^2; MAX_DPOS=10; MAX_DVEL=5;
 rr=rtk_gnss.sol.pos'; 
 [pos_GNSS,Cne]=xyz2blh(rr); % 得到转换矩阵Cne
 
-% VE to VN  GNSS位置转换
+% VE to VN  速度转换e系→n系
 ve=rtk_gnss.sol.vel; 
 vel_GNSS=Cne*ve';
 
