@@ -38,7 +38,7 @@ if rtk.opt.tidecorr==1
 end
 
 
-while iter<=MAXITER
+while iter<=MAXITER %---------------------- 不滤波太多次，怕收敛不了 ------------------
     
     % calculate residuals,measurement matrix,measurement noise matrix
     [v,H,R,~,exc,nv,rtk]=pppins_res(0,rtk.x,rtk,obs,nav,sv,dr,exc); %v=z-Hx
@@ -55,7 +55,6 @@ while iter<=MAXITER
     % calculate posteriori residuals,validate the solution
     [~,~,~,~,exc,stat,rtk]=pppins_res(iter,x,rtk,obs,nav,sv,dr,exc);
     iter=iter+1;
-    %---------------------- 不滤波太多次，怕收敛不了 ------------------
     
     if stat==1
         rtk.x=x; rtk.P=P; break;
@@ -63,6 +62,7 @@ while iter<=MAXITER
     
 end
 
+% 若一直无法收敛
 if iter>MAXITER
     [week,sow]=time2gpst(obs(1).time);
     fprintf('Warning:GPS week=%d sow=%.3f,PPP/INS iteration overflows!\n',week,sow);

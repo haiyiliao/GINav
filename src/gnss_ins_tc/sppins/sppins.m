@@ -21,7 +21,7 @@ opt.sateph =glc.EPHOPT_BRDC;
 % update state
 rtk=udstate_sppins(rtk);
 
-% cumpute satellite position,clock bias,velocity,clock drift
+% compute satellite position,clock bias,velocity,clock drift
 sv=satposs(obs,navs,opt.sateph); 
 
 xp=rtk.x; Pp=rtk.P; x_fb=zeros(rtk.nx,1);

@@ -37,7 +37,7 @@ elseif opt.mode==glc.PMODE_DGNSS||opt.mode==glc.PMODE_KINEMA
     [rtk,stat]=rtkins(rtk,obsr,obsb,nav);
 else
     % PPP/INS
-    [rtk,stat]=pppins(rtk,obsr,nav); 
+    [rtk,stat]=pppins(rtk,obsr,nav);
 end
  
 return

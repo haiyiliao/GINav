@@ -23,7 +23,7 @@ nobsr=size(obsr,1); nobsb=size(obsb,1);
 if rtk.opt.mode<=glc.PMODE_DGNSS
     stat=glc.SOLQ_DGNSS;
 else
-    stat=glc.SOLQ_FLOAT;
+    stat=glc.SOLQ_FLOAT; %浮点解
 end
 
 for i=1:glc.MAXSAT
@@ -123,7 +123,7 @@ if stat~=glc.SOLQ_NONE
                     % hold integer ambiguity
                     rtk=holdamb_rtkins(rtk,xa);
                 end
-                stat=glc.SOLQ_FIX;
+                stat=glc.SOLQ_FIX; %固定解
             end
         end
     end

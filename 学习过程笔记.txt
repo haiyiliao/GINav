@@ -4,4 +4,8 @@ GINav支持多系统多频点（包括北三）
 
 GINav支持INS辅助周跳探测、鲁棒性估计
 
+
+
+
 GINav没有做PPP的模糊度固定。RTKLIB也一样，不过老版本有。
+GINav没有做valpos_rel浮点解检验，这个函数在RTK/INS系统里
