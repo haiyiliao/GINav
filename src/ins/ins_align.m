@@ -2,6 +2,14 @@ function [rtk,ins_align_flag]=ins_align(rtk,obsr_,obsb_,nav)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Copyright (C) 2020-2025, by Kai Chen, All rights reserved.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% In                rtk                         
+%                   obsr_
+%                   obsb_
+%                   nav                         
+%
+% Out               rtk                         GNSS解算更新、INS修正更新
+%                   ins_align_flag              对准标志
+
 global glc
 ins_align_flag=0;
 

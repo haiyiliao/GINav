@@ -5,6 +5,14 @@ function [rtk,stat]=gi_Tight(rtk,obsr,obsb,nav)
 %Copyright(c) 2020-2025, by Kai Chen, All rights reserved.
 %8/12/2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% In                    rtk_gi                      INS结果
+%                       obsr
+%                       obsb
+%                       nav
+%
+% Out                   rtk_gi                      INS校正结果
+%                       stat                       组合导航标志
+
 global glc
 opt=rtk.opt; time=rtk.gi_time;
 if time.time~=0,rtk.tt=timediff(obsr(1).time,time);end

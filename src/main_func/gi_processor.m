@@ -36,7 +36,7 @@ while 1
     %%%%%%%%%%%%%%%%%%%%%%%% 每次循环都读一个IMU %%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % search imu data
     [imud,imu,stat]=searchimu(imu); 
-    if stat==0 %imu数据读取失败
+    if stat==0 % imu数据读取失败，退出组合导航循环
         str=sprintf('Processing... %.1f%%',100*tspan/tspan);
         waitbar(tspan/tspan,hbar,str);
         break;
@@ -67,24 +67,24 @@ while 1
                 ins=ins_mech(ins,imud); % 力学更新：机械编排，输出INS导航信息
                 ins=ins_time_updata(ins);   % 时间更新
                 % 上面两个式子属于KF状态部分更新（预测阶段）。INS的时间相关性更强，因此用于KF状态部分更新
-
             end
             oldobstime=obsr_(1).time;   % 更新观测时间
             continue; % 并回到循环头
         end
         oldobstime=obsr_(1).time; % 历元开始处理，更新观测时间
         
-        %----------------------- 没有初始对准 ------------------------------
+        
         if ins_align_flag==0
+        %------------------------- 未初始对准 ------------------------------
             % INS initial alignment
             [rtk_align,ins_align_flag]=ins_align(rtk_align,obsr_,obsb_,nav);
-            % roll、pitch置零，yaw用动态对准，载体速度大于5米每秒，用e系速度除以n系速度得到tan航向
+            % roll、pitch置零，yaw用动态速度来对准，载体速度大于5米每秒，用e系速度除以n系速度得到tan航向
 
             if ins_align_flag==1
                 ins=rtk_align.ins;
                 rtk_gi=gi_initrtk(rtk,opt,rtk_align);
                 if opt.ins.mode==glc.GIMODE_LC
-                    rtk_gnss=rtk_align; %----------------------------------
+                    rtk_gnss=rtk_align; %---------------------------------- ?
                 end
                 
                 % write solution to output file
@@ -92,7 +92,7 @@ while 1
                 rtk_gi=ins2sol(rtk_gi,ins);
                 outsol(rtk_gi);
                 
-                % kinematic plot    运动轨迹绘制
+                % kinematic plot
                 plot_trajectory_kine(hfig,rtk_gi);
                 fprintf('Info:INS initial alignment ok\n');
                 
@@ -104,9 +104,9 @@ while 1
                 % kinematic plot
                 plot_trajectory_kine(hfig,rtk_align);
             end
-
-        %----------------------- 已经初始对准 ------------------------------
+        
         else
+        %----------------------- 已经初始对准 ------------------------------
             % INS re-alignment 重对准
             gi_time=rtk_gi.gi_time;
             if gi_time.time~=0&&abs(timediff(ins.time,gi_time))>MAX_GNSS_OUTAGE %超时就重对准
@@ -127,7 +127,7 @@ while 1
                     if opt.ins.mode==glc.GIMODE_LC
                         rtk_gnss=rtk_align;
                     end
-                    rtk_align_falg=0;
+                    rtk_align_falg=0; %------------------------------------ ?
                     
                     % write solution to output file
                     ins.time=rtk_gi.sol.time;
@@ -172,7 +172,7 @@ while 1
             
             rtk_gi=ins2sol(rtk_gi,ins);
             
-            %%%%%%%%%%%%%%%%% GNSS measurement update  %%%%%%%%%%%%%%%%%%%%
+            % GNSS measurement update
             rtk_gi.ins=ins;
 
             % GNSS不同时刻的噪声无规律，因此，用GNSS+INS进行KF观测部分更新
@@ -184,7 +184,7 @@ while 1
                 [rtk_gi,stat_tmp]=gi_Tight(rtk_gi,obsr_,obsb_,nav);
             end
             
-            % 组合导航数据赋值给ins
+            % 组合导航数据赋值给ins      % 这里就是对ins进行校正
             ins=rtk_gi.ins;
 
             if stat_tmp==0 %组合导航失败
@@ -205,9 +205,9 @@ while 1
         end
         
     %%%%%%%%%%%%%%%%%%%% 若无GNSS匹配数据，则进行IMU解算 %%%%%%%%%%%%%%%%%%%%
-    else 
-        if ins_align_flag==0,continue;end
-        if rtk_align_falg==1&&ins_realign_flag==0,continue;end
+    else
+        if ins_align_flag==0,continue;end %无GNSS且没有初始对准，就一直等到GNSS
+        if rtk_align_falg==1&&ins_realign_flag==0,continue;end %无GNSS，有RTK对准，没INS重对准，就一直等到重对准
         
         % INS mechanization and time update
         ins=ins_mech(ins,imud);
