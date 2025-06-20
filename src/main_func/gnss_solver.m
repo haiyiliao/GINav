@@ -20,7 +20,7 @@ if opt.mode==glc.PMODE_SPP||opt.mode>=glc.PMODE_PPP_KINEMA
 end
 
 % standard point positioning    
-[rtk,stat0]=sppos(rtk,obsr,nav); % SPP处理，若不需要继续处理，则return
+[rtk,stat0]=sppos(rtk,obsr,nav); % SPP
 if stat0==0,return;end
 
 if time.time~=0,rtk.tt=timediff(rtk.sol.time,time);end   

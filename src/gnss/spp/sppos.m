@@ -27,8 +27,8 @@ end
 % compute satellite(space vehicle) position,clock bias,velocity,clock drift
 sv=satposs(obs,navs,opt.sateph); 
 
-% compute reciever position,clock bias
-[rtk,sat_,stat0]=estpos(rtk,obs,navs,sv,opt); %位置解算出来
+% compute reciever position,clock bias 解算rx位置和钟差
+[rtk,sat_,stat0]=estpos(rtk,obs,navs,sv,opt);
 
 % RAIM failure detection and exclution(FDE)
 if stat0==0&&nobs>=6&&rtk.opt.posopt(5)==1

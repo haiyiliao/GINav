@@ -1,4 +1,5 @@
 function rtk=udclk_sppins(rtk)
+% ------------------------------------------------------------------------- 没看明白
 
 global glc
 opt=rtk.opt;  tt=abs(rtk.tt);

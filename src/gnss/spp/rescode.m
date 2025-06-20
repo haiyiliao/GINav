@@ -43,7 +43,7 @@ for i=1:nobs    %一个一个卫星来算
     [troperr,Vtrop]=trop_cor(glc.TROPOPT_SAAS,obs(i).time,nav,pos,azel(i,:));
 
     % pseudorange residuals
-    v(nv+1)=pr-(r+dtr-glc.CLIGHT*dts+ionoerr+troperr);  %%%%%%%%%%%%%%%%%%% 没做归一化
+    v(nv+1)=pr-(r+dtr-glc.CLIGHT*dts+ionoerr+troperr);  %------------------ 没做归一化
     
     % design measurement matrix
     H(nv+1,:)=[-LOS,1,0,0,0,0];
@@ -56,7 +56,7 @@ for i=1:nobs    %一个一个卫星来算
     
     % variance matrix   获取噪声方差，后面做取权值
     VARr=varerr_spp(opt,azel(i,2),sys);
-    var(nv+1,nv+1)=VARr+Vars+Viono+Vtrop+Vmea;
+    var(nv+1,nv+1)=VARr+Vars+Viono+Vtrop+Vmea; %卫星的var对应记录的数据
     
     % record validate satellite,rasidual
     vsat(i)=1;  resp(i)=v(nv+1,1);  idx(nv+1)=i;    %保存数据
@@ -67,11 +67,11 @@ for i=1:nobs    %一个一个卫星来算
 end
 
 % add the virtual observation value to avoid rank defect
-for i=1:5
+for i=1:5 %对应5个系统
     if mask(i)==1,continue;end
     v(nv+1,1)=0;
     H(nv+1,3+i)=1;
-    var(nv+1,nv+1)=0.01;
+    var(nv+1,nv+1)=0.01; %系统的var对应0.01-----要对比好上面卫星的var
     nv=nv+1;
 end
 

@@ -8,10 +8,10 @@ function [rtk,stat]=gi_Tight(rtk,obsr,obsb,nav)
 % In                    rtk_gi                      INS结果
 %                       obsr
 %                       obsb
-%                       nav
+%                       nav                         导航信息
 %
 % Out                   rtk_gi                      INS校正结果
-%                       stat                       组合导航标志
+%                       stat                        组合导航标志
 
 global glc
 opt=rtk.opt; time=rtk.gi_time;

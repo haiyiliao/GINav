@@ -18,10 +18,10 @@ VAR_POS=10^2; VAR_VEL=0.15^2; MAX_DPOS=10; MAX_DVEL=5;
 
 % XYZ to BLH    GNSS位置从XYZ转换为BLH
 rr=rtk_gnss.sol.pos'; 
-[pos_GNSS,Cne]=xyz2blh(rr); % 得到转换矩阵Cne
+[pos_GNSS,Cne]=xyz2blh(rr); % 得到转换矩阵Cne %----------------------------- 为什么这里n系是纬经高？
 
 % VE to VN  速度转换e系→n系
-ve=rtk_gnss.sol.vel; 
+ve=rtk_gnss.sol.vel;
 vel_GNSS=Cne*ve';
 
 % XYZ variance to BLH variance  位置方差转换
@@ -33,7 +33,7 @@ if max(diag(P))>VAR_POS % 如果最大的对角元素大于设定的位置方差
     rr=zeros(3,1);
 else
     P=T^-1*P*(T')^-1;
-    VAR1=[P(1,1);P(2,2);P(3,3)]; % 提取对角线元素做微信的方差
+    VAR1=[P(1,1);P(2,2);P(3,3)]; % 提取对角线元素做卫星的方差
 end
 
 % VE variance to VN variance    速度方差转换
@@ -70,7 +70,7 @@ if rtk_gi.ngnsslock>10&&norm(ve)~=0 %锁定次数大于10，且GNSS速度不为�
 end
 
 % calculate v,H and R
-if norm(rr)~=0&&norm(ve)~=0 % 位置和速度的模都不为零，就计算v, H, R
+if norm(rr)~=0&&norm(ve)~=0
     v1=pos_INS-pos_GNSS'; v2=vel_INS-vel_GNSS; 
     if opt.mode==glc.PMODE_SPP||(opt.mode==glc.PMODE_DGNSS&&opt.dynamics==1)||...
             (opt.mode==glc.PMODE_KINEMA&&opt.dynamics==1)||...
@@ -88,9 +88,9 @@ if norm(rr)~=0&&norm(ve)~=0 % 位置和速度的模都不为零，就计算v, H,
     end 
 elseif norm(rr)~=0&&norm(ve)==0
     v=pos_INS-pos_GNSS';
-    R=diag(VAR1); 
+    R=diag(VAR1);
     H=zeros(3,15);
-    H(1,7)=1;H(2,8)=1;H(3,9)=1;  
+    H(1,7)=1;H(2,8)=1;H(3,9)=1;
 elseif norm(rr)==0&&norm(ve)~=0
     if opt.mode==glc.PMODE_SPP||(opt.mode==glc.PMODE_DGNSS&&opt.dynamics==1)||...
             (opt.mode==glc.PMODE_KINEMA&&opt.dynamics==1)||...
